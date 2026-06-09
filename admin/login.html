@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Login - AI-Solutions</title>
+  <script src="../frontend/theme.js"></script>
+  <link rel="stylesheet" href="admin.css"/>
+  <script src="https://www.google.com/recaptcha/api.js?render=6LcbsxEtAAAAAA_sd-G5YTUs_YvzEyZhbNcBIiac"></script>
+</head>
+<body>
+  <header><nav><a href="../frontend/index.html" class="brand" aria-label="AI-Solutions home"><img src="../frontend/logo.svg" alt="AI-Solutions logo"/><span>AI-Solutions Admin</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"><span class="theme-label">DAY MODE</span><span class="theme-icon" aria-hidden="true">&#9737;</span></button></nav></header>
+  <main>
+    <section class="login-section">
+      <div class="login-box">
+        <h2> Admin Login</h2>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="username" placeholder="Enter username"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Enter password" onkeydown="if(event.key==='Enter') adminLogin()"/>
+        </div>
+        <button class="btn" onclick="adminLogin()" style="width:100%">Login</button>
+        <p id="loginMsg" class="error-msg"></p>
+      </div>
+    </section>
+  </main>
+  <script>
+    const RECAPTCHA_SITE_KEY = '6LcbsxEtAAAAAA_sd-G5YTUs_YvzEyZhbNcBIiac';
+
+    function getRecaptchaToken(action) {
+      return new Promise((resolve, reject) => {
+        if (!window.grecaptcha) {
+          reject(new Error('reCAPTCHA is not loaded.'));
+          return;
+        }
+        grecaptcha.ready(() => {
+          grecaptcha.execute(RECAPTCHA_SITE_KEY, { action }).then(resolve).catch(reject);
+        });
+      });
+    }
+
+    async function adminLogin() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const msg = document.getElementById('loginMsg');
+      if (!username || !password) { msg.textContent = 'Please enter username and password.'; return; }
+      msg.textContent = 'Checking login...';
+      try {
+        const recaptchaToken = await getRecaptchaToken('admin_login');
+        const res = await fetch('http://localhost:5000/api/admin/login', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ username, password, recaptchaToken })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('adminToken', data.token);
+          window.location.href = 'dashboard.html';
+        } else {
+          msg.textContent = data.message || 'Invalid credentials.';
+        }
+      } catch { msg.textContent = 'Cannot connect to server.'; }
+    }
+  </script>
+</body>
+</html>

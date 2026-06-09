@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Setup - AI-Solutions</title>
+  <script src="../frontend/theme.js"></script>
+  <link rel="stylesheet" href="admin.css"/>
+</head>
+<body>
+  <header><nav><a href="../frontend/index.html" class="brand" aria-label="AI-Solutions home"><img src="../frontend/logo.svg" alt="AI-Solutions logo"/><span>AI-Solutions Admin Setup</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"><span class="theme-label">DAY MODE</span><span class="theme-icon" aria-hidden="true">&#9737;</span></button></nav></header>
+  <main>
+    <section class="login-section">
+      <div class="login-box">
+        <h2>Fix Admin Login</h2>
+        <p class="muted-text" style="font-size:0.9rem;margin-bottom:20px;text-align:center;">Use this page once to reset your admin credentials.</p>
+        <div class="form-group"><label>Setup Key</label><input type="password" id="setupKey" placeholder="Enter setup key"/></div>
+        <div class="form-group"><label>New Username</label><input type="text" id="newUsername" value="admin"/></div>
+        <div class="form-group"><label>New Password</label><input type="password" id="newPassword" placeholder="Enter new password"/></div>
+        <button class="btn" onclick="doSetup()" style="width:100%">Reset Admin</button>
+        <p id="setupMsg" style="text-align:center;margin-top:15px;font-weight:bold;"></p>
+        <p class="muted-text" style="font-size:0.8rem;text-align:center;margin-top:15px;">Setup key: <strong>SETUP_AI_SOLUTIONS_2026</strong></p>
+      </div>
+    </section>
+  </main>
+  <script>
+    async function doSetup() {
+      const msg = document.getElementById('setupMsg');
+      const setupKey = document.getElementById('setupKey').value;
+      const username = document.getElementById('newUsername').value;
+      const password = document.getElementById('newPassword').value;
+      if (!username || !password) { msg.style.color='red'; msg.textContent='Please fill all fields.'; return; }
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/setup', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ setupKey, username, password })
+        });
+        const data = await res.json();
+        if (res.ok) { msg.style.color='green'; msg.textContent=data.message; setTimeout(()=>window.location.href='login.html',2000); }
+        else { msg.style.color='red'; msg.textContent=data.message; }
+      } catch { msg.style.color='red'; msg.textContent='Cannot connect to server.'; }
+    }
+  </script>
+</body>
+</html>

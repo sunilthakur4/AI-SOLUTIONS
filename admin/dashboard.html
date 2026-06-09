@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard - AI-Solutions</title>
+  <script src="../frontend/theme.js"></script>
+  <link rel="stylesheet" href="admin.css"/>
+</head>
+<body class="auth-checking">
+  <header>
+    <nav>
+      <a href="../frontend/index.html" class="brand" aria-label="AI-Solutions home"><img src="../frontend/logo.svg" alt="AI-Solutions logo"/><span>AI-Solutions Admin</span></a>
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul>
+        <li><a href="../frontend/index.html">View Website</a></li>
+        <li><a href="#" onclick="logout()">Logout</a></li>
+      </ul>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"><span class="theme-label">DAY MODE</span><span class="theme-icon" aria-hidden="true">&#9737;</span></button>
+    </nav>
+  </header>
+  <main>
+    <div id="authStatus" class="auth-status">Verifying admin session...</div>
+    <div class="admin-section">
+      <section class="dashboard-hero">
+        <div>
+          <span class="admin-kicker">Admin Workspace</span>
+          <h1>Inquiry Management Dashboard</h1>
+          <p>Review customer inquiries, respond quickly, and manage website content from one focused workspace.</p>
+        </div>
+        <div class="dashboard-actions">
+          <button class="btn btn-sm" onclick="loadInquiries()">Refresh</button>
+          <button class="btn btn-sm" onclick="exportCSV()">Export CSV</button>
+        </div>
+      </section>
+
+      <div class="tab-bar dashboard-tabs">
+        <button class="tab active" onclick="switchSection('inquiries',this)">Inquiries</button>
+        <button class="tab" onclick="switchSection('content',this)">Content Manager</button>
+      </div>
+
+      <!-- ========== INQUIRIES SECTION ========== -->
+      <div id="section-inquiries">
+        <div class="section-heading">
+          <div>
+            <h2>Inquiry Dashboard</h2>
+            <p>Track incoming inquiries and reply to customers directly.</p>
+          </div>
+        </div>
+        <div class="stats-bar">
+          <div class="stat-card"><h3 id="totalCount">--</h3><p>Total</p></div>
+          <div class="stat-card"><h3 id="todayCount">--</h3><p>Today</p></div>
+          <div class="stat-card"><h3 id="weekCount">--</h3><p>This Week</p></div>
+          <div class="stat-card"><h3 id="repliedCount">--</h3><p>Replied</p></div>
+        </div>
+        <div class="admin-toolbar">
+          <input type="text" id="searchInput" placeholder="Search by name, company or country..."/>
+          <select id="sortSelect">
+            <option value="created_at">Sort by Date</option>
+            <option value="name">Sort by Name</option>
+            <option value="country">Sort by Country</option>
+            <option value="job_title">Sort by Job Title</option>
+          </select>
+          <button class="btn btn-sm" onclick="loadInquiries()">Search</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Country</th><th>Job Title</th><th>Inquiry</th><th>AI Response</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+            <tbody id="inquiryBody"><tr><td colspan="12" style="text-align:center;">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========== CONTENT MANAGER SECTION ========== -->
+      <div id="section-content" style="display:none;">
+        <div class="section-heading">
+          <div>
+            <h2>Content Manager</h2>
+            <p>Create and update content shown across public pages.</p>
+          </div>
+        </div>
+        <div class="admin-toolbar">
+          <select id="pageFilter" onchange="loadPosts()">
+            <option value="">All Pages</option>
+            <option value="home">Home</option>
+            <option value="solutions">Solutions</option>
+            <option value="events">Events</option>
+            <option value="blog">Blog</option>
+            <option value="casestudies">Case Studies</option>
+            <option value="testimonials">Testimonials</option>
+            <option value="gallery">Gallery</option>
+          </select>
+          <button class="btn btn-sm" onclick="openPostModal()">Add New Post</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Page</th><th>Title</th><th>Content</th><th>Author/Extra</th><th>Published</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="postsBody"><tr><td colspan="8" style="text-align:center;">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Reply Modal -->
+  <div class="modal-overlay" id="replyModal">
+    <div class="modal-box">
+      <h3>Reply to Inquiry</h3>
+      <p class="muted-text" style="font-size:0.9rem;margin-bottom:5px;">To: <strong id="replyToName"></strong> (<span id="replyToEmail"></span>)</p>
+      <p class="muted-text" style="font-size:0.85rem;margin-bottom:15px;">Inquiry: <em id="replyInquiryText"></em></p>
+      <div class="form-group"><textarea id="replyMessage" rows="6" placeholder="Type your reply here..."></textarea></div>
+      <div id="replyStatus"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('replyModal')">Cancel</button>
+        <button class="btn" onclick="sendReply()">Send Reply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Post Modal -->
+  <div class="modal-overlay" id="postModal">
+    <div class="modal-box">
+      <h3 id="postModalTitle">Add New Post</h3>
+      <input type="hidden" id="postId"/>
+      <div class="form-group">
+        <label>Page *</label>
+        <select id="postPage">
+          <option value="home">Home</option>
+          <option value="solutions">Solutions</option>
+          <option value="events">Events</option>
+          <option value="blog">Blog</option>
+          <option value="casestudies">Case Studies</option>
+          <option value="testimonials">Testimonials</option>
+          <option value="gallery">Gallery</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Title *</label><input type="text" id="postTitle" placeholder="Enter title"/></div>
+      <div class="form-group"><label>Content</label><textarea id="postContent" rows="4" placeholder="Enter content or description..."></textarea></div>
+      <div class="form-group"><label>Author (for testimonials)</label><input type="text" id="postAuthor" placeholder="e.g. John Smith, CEO"/></div>
+      <div class="form-group"><label>Extra Info (date / client / category)</label><input type="text" id="postExtra" placeholder="e.g. May 2026 or Client: RetailCo"/></div>
+      <div class="form-group">
+        <label>Image URL (for gallery)</label>
+        <input type="text" id="postImage" placeholder="https://example.com/image.jpg"/>
+      </div>
+      <div class="form-group">
+        <label>Upload Image From Device (for gallery)</label>
+        <input type="file" id="postImageFile" accept="image/*"/>
+        <p class="muted-text" style="font-size:0.8rem;margin-top:6px;">Optional. This will replace the Image URL when selected.</p>
+      </div>
+      <div class="form-group">
+        <label>Rating (1-5, for testimonials)</label>
+        <select id="postRating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+      </div>
+      <div class="form-group">
+        <label>Published</label>
+        <select id="postPublished"><option value="true">Yes</option><option value="false">No</option></select>
+      </div>
+      <div id="postStatus"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('postModal')">Cancel</button>
+        <button class="btn" onclick="savePost()">Save Post</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BACKEND = 'http://localhost:5000';
+    const token = localStorage.getItem('adminToken');
+    let currentReply = {};
+    let inquiriesById = {};
+
+    async function verifyAdminSession() {
+      if (!token) {
+        window.location.replace('login.html');
+        return false;
+      }
+      try {
+        const res = await fetch(`${BACKEND}/api/admin/verify`, {
+          headers:{'Authorization':`Bearer ${token}`}
+        });
+        if (!res.ok) {
+          logout();
+          return false;
+        }
+        document.body.classList.remove('auth-checking');
+        document.getElementById('authStatus').style.display = 'none';
+        return true;
+      } catch {
+        document.getElementById('authStatus').textContent = 'Could not verify admin session. Make sure the backend server is running.';
+        return false;
+      }
+    }
+
+    function switchSection(name, btn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('section-inquiries').style.display = name === 'inquiries' ? 'block' : 'none';
+      document.getElementById('section-content').style.display = name === 'content' ? 'block' : 'none';
+      if (name === 'content') loadPosts();
+    }
+
+    // ===== INQUIRIES =====
+    async function loadInquiries() {
+      const search = document.getElementById('searchInput').value;
+      const sort = document.getElementById('sortSelect').value;
+      const tbody = document.getElementById('inquiryBody');
+      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;">Loading...</td></tr>';
+      try {
+        const res = await fetch(`${BACKEND}/api/admin/inquiries?search=${encodeURIComponent(search)}&sort=${sort}`, { headers:{'Authorization':`Bearer ${token}`} });
+        if (res.status === 401 || res.status === 403) { logout(); return; }
+        const data = await res.json();
+        const today = new Date().toDateString();
+        const weekAgo = new Date(Date.now()-7*24*60*60*1000);
+        document.getElementById('totalCount').textContent = data.length;
+        document.getElementById('todayCount').textContent = data.filter(i=>new Date(i.created_at).toDateString()===today).length;
+        document.getElementById('weekCount').textContent = data.filter(i=>new Date(i.created_at)>=weekAgo).length;
+        document.getElementById('repliedCount').textContent = data.filter(i=>i.admin_reply).length;
+        inquiriesById = Object.fromEntries(data.map(i => [String(i.id), i]));
+        if (!data.length) { tbody.innerHTML='<tr><td colspan="12" style="text-align:center;">No inquiries found.</td></tr>'; return; }
+        tbody.innerHTML = data.map((i,idx)=>`
+          <tr class="inquiry-summary-row">
+            <td>${idx+1}</td><td>${escapeHtml(i.name)}</td>
+            <td><a href="mailto:${escapeAttr(i.email)}" class="link-text">${escapeHtml(i.email)}</a></td>
+            <td>${escapeHtml(i.phone||'-')}</td><td>${escapeHtml(i.company||'-')}</td><td>${escapeHtml(i.country||'-')}</td><td>${escapeHtml(i.job_title||'-')}</td>
+            <td class="truncate-cell">${escapeHtml(i.job_details)}</td>
+            <td class="truncate-cell link-text">${escapeHtml(i.ai_response||'Pending')}</td>
+            <td>${i.admin_reply?'<span class="replied-badge">Replied</span>':'<span class="pending-text">Pending</span>'}</td>
+            <td>${new Date(i.created_at).toLocaleDateString()}</td>
+            <td class="row-actions">
+              <button class="btn-edit" onclick="toggleInquiry(${i.id})">View</button>
+              <button class="btn-edit" onclick="openReplyById(${i.id})">Reply</button>
+              <button class="btn-danger" onclick="deleteInquiry(${i.id})">Delete</button>
+            </td>
+          </tr>
+          <tr class="inquiry-detail-row" id="inquiry-detail-${i.id}">
+            <td colspan="12">
+              <div class="inquiry-detail-card">
+                <div><strong>Full Inquiry</strong><p>${escapeHtml(i.job_details)}</p></div>
+                <div><strong>AI Response</strong><p>${escapeHtml(i.ai_response||'Pending')}</p></div>
+                <div><strong>Admin Reply</strong><p>${escapeHtml(i.admin_reply||'No admin reply yet.')}</p></div>
+                <div class="detail-grid">
+                  <span><strong>Name:</strong> ${escapeHtml(i.name)}</span>
+                  <span><strong>Email:</strong> ${escapeHtml(i.email)}</span>
+                  <span><strong>Phone:</strong> ${escapeHtml(i.phone||'-')}</span>
+                  <span><strong>Company:</strong> ${escapeHtml(i.company||'-')}</span>
+                  <span><strong>Country:</strong> ${escapeHtml(i.country||'-')}</span>
+                  <span><strong>Job Title:</strong> ${escapeHtml(i.job_title||'-')}</span>
+                </div>
+              </div>
+            </td>
+          </tr>`).join('');
+      } catch(err) {
+        tbody.innerHTML = '<tr><td colspan="12" class="danger-text" style="text-align:center;">Failed to load. Is the server running?</td></tr>';
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value).replace(/`/g, '&#096;');
+    }
+
+    function toggleInquiry(id) {
+      const row = document.getElementById(`inquiry-detail-${id}`);
+      if (row) row.classList.toggle('open');
+    }
+
+    function openReplyById(id) {
+      const inquiry = inquiriesById[String(id)];
+      if (!inquiry) return;
+      openReply(inquiry.id, inquiry.name, inquiry.email, inquiry.job_details || '');
+    }
+
+    function openReply(id, name, email, inquiry) {
+      currentReply = { id, name, email };
+      document.getElementById('replyToName').textContent = name;
+      document.getElementById('replyToEmail').textContent = email;
+      document.getElementById('replyInquiryText').textContent = inquiry;
+      document.getElementById('replyMessage').value = '';
+      document.getElementById('replyStatus').innerHTML = '';
+      document.getElementById('replyModal').classList.add('open');
+    }
+
+    async function deleteInquiry(id) {
+      if (!confirm('Delete this inquiry record?')) return;
+      try {
+        const res = await fetch(`${BACKEND}/api/admin/inquiries/${id}`, {
+          method:'DELETE',
+          headers:{'Authorization':`Bearer ${token}`}
+        });
+        if (res.status === 401 || res.status === 403) { logout(); return; }
+        if (!res.ok) {
+          const data = await res.json();
+          alert(data.message || 'Could not delete inquiry.');
+          return;
+        }
+        loadInquiries();
+      } catch {
+        alert('Could not connect to the server.');
+      }
+    }
+
+    async function sendReply() {
+      const msg = document.getElementById('replyMessage').value.trim();
+      const status = document.getElementById('replyStatus');
+      if (!msg) { status.innerHTML='<p class="error-msg">Please type a reply.</p>'; return; }
+      status.innerHTML='<p class="muted-text" style="text-align:center;">Sending...</p>';
+      try {
+        const res = await fetch(`${BACKEND}/api/admin/reply`, {
+          method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+          body: JSON.stringify({inquiryId:currentReply.id,toEmail:currentReply.email,toName:currentReply.name,replyMessage:msg})
+        });
+        const data = await res.json();
+        if (res.ok) { status.innerHTML='<p class="success-msg">Reply sent.</p>'; setTimeout(()=>{closeModal('replyModal');loadInquiries();},1500); }
+        else { status.innerHTML=`<p class="error-msg">${data.message}</p>`; }
+      } catch { status.innerHTML='<p class="error-msg">Could not connect.</p>'; }
+    }
+
+    function exportCSV() { window.open(`${BACKEND}/api/admin/export?token=${token}`,'_blank'); }
+
+    // ===== CONTENT MANAGER =====
+    async function loadPosts() {
+      const page = document.getElementById('pageFilter').value;
+      const tbody = document.getElementById('postsBody');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>';
+      try {
+        const url = page ? `${BACKEND}/api/admin/posts?page=${page}` : `${BACKEND}/api/admin/posts`;
+        const res = await fetch(url, { headers:{'Authorization':`Bearer ${token}`} });
+        const posts = await res.json();
+        if (!posts.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;">No posts found. Click "Add New Post" to create one.</td></tr>'; return; }
+        tbody.innerHTML = posts.map((p,i)=>`
+          <tr>
+            <td>${i+1}</td>
+            <td><span class="tag">${p.page}</span></td>
+            <td><strong>${p.title}</strong></td>
+            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.content||'-'}</td>
+            <td>${p.author||''} ${p.extra||''}</td>
+            <td>${p.published?'<span class="success-text">Yes</span>':'<span class="danger-text">No</span>'}</td>
+            <td>${new Date(p.created_at).toLocaleDateString()}</td>
+            <td style="display:flex;gap:6px;">
+              <button class="btn-edit" onclick="editPost(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>
+              <button class="btn-danger" onclick="deletePost(${p.id})">Delete</button>
+            </td>
+          </tr>`).join('');
+      } catch { tbody.innerHTML='<tr><td colspan="8" class="danger-text" style="text-align:center;">Failed to load posts.</td></tr>'; }
+    }
+
+    function openPostModal() {
+      document.getElementById('postModalTitle').textContent = 'Add New Post';
+      document.getElementById('postId').value = '';
+      document.getElementById('postTitle').value = '';
+      document.getElementById('postContent').value = '';
+      document.getElementById('postAuthor').value = '';
+      document.getElementById('postExtra').value = '';
+      document.getElementById('postImage').value = '';
+      document.getElementById('postImageFile').value = '';
+      document.getElementById('postRating').value = '5';
+      document.getElementById('postPublished').value = 'true';
+      document.getElementById('postStatus').innerHTML = '';
+      document.getElementById('postModal').classList.add('open');
+    }
+
+    function editPost(p) {
+      document.getElementById('postModalTitle').textContent = 'Edit Post';
+      document.getElementById('postId').value = p.id;
+      document.getElementById('postPage').value = p.page;
+      document.getElementById('postTitle').value = p.title;
+      document.getElementById('postContent').value = p.content || '';
+      document.getElementById('postAuthor').value = p.author || '';
+      document.getElementById('postExtra').value = p.extra || '';
+      document.getElementById('postImage').value = p.image_url || '';
+      document.getElementById('postImageFile').value = '';
+      document.getElementById('postRating').value = p.rating || 5;
+      document.getElementById('postPublished').value = p.published ? 'true' : 'false';
+      document.getElementById('postStatus').innerHTML = '';
+      document.getElementById('postModal').classList.add('open');
+    }
+
+    function readImageFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Could not read image file.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function savePost() {
+      const id = document.getElementById('postId').value;
+      const status = document.getElementById('postStatus');
+      const imageFile = document.getElementById('postImageFile').files[0];
+      let imageUrl = document.getElementById('postImage').value.trim();
+      if (imageFile) {
+        if (!imageFile.type.startsWith('image/')) {
+          status.innerHTML='<p class="error-msg">Please choose a valid image file.</p>';
+          return;
+        }
+        imageUrl = await readImageFileAsDataUrl(imageFile);
+      }
+      const body = {
+        page: document.getElementById('postPage').value,
+        title: document.getElementById('postTitle').value.trim(),
+        content: document.getElementById('postContent').value.trim(),
+        author: document.getElementById('postAuthor').value.trim(),
+        extra: document.getElementById('postExtra').value.trim(),
+        image_url: imageUrl,
+        rating: parseInt(document.getElementById('postRating').value),
+        published: document.getElementById('postPublished').value === 'true'
+      };
+      if (!body.title) { status.innerHTML='<p class="error-msg">Title is required.</p>'; return; }
+      status.innerHTML='<p class="muted-text" style="text-align:center;">Saving...</p>';
+      try {
+        const url = id ? `${BACKEND}/api/admin/posts/${id}` : `${BACKEND}/api/admin/posts`;
+        const method = id ? 'PUT' : 'POST';
+        const res = await fetch(url, { method, headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify(body) });
+        const data = await res.json();
+        if (res.ok) { status.innerHTML='<p class="success-msg">Saved.</p>'; setTimeout(()=>{closeModal('postModal');loadPosts();},1000); }
+        else { status.innerHTML=`<p class="error-msg">${data.message}</p>`; }
+      } catch { status.innerHTML='<p class="error-msg">Could not connect.</p>'; }
+    }
+
+    async function deletePost(id) {
+      if (!confirm('Are you sure you want to delete this post?')) return;
+      try {
+        await fetch(`${BACKEND}/api/admin/posts/${id}`, { method:'DELETE', headers:{'Authorization':`Bearer ${token}`} });
+        loadPosts();
+      } catch { alert('Failed to delete post.'); }
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function logout() { localStorage.removeItem('adminToken'); window.location.href='login.html'; }
+
+    verifyAdminSession().then(valid => {
+      if (valid) loadInquiries();
+    });
+  </script>
+</body>
+</html>

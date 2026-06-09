@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Solutions - AI-Solutions</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header><nav><a href="index.html" class="brand" aria-label="AI-Solutions home"><img src="logo.svg" alt="AI-Solutions logo"/><span>AI-Solutions</span></a><button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button><ul>
+    <li><a href="index.html">Home</a></li><li><a href="solutions.html" class="active">Solutions</a></li>
+    <li><a href="events.html">Events</a></li>
+    <li><a href="blog-casestudies.html">Blog &amp; Case Studies</a></li>
+    <li><a href="testimonials.html">Testimonials</a></li><li><a href="gallery.html">Gallery</a></li>
+    <li><a href="contact.html">Contact Us</a></li>
+  </ul><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"><span class="theme-label">DAY MODE</span><span class="theme-icon" aria-hidden="true">&#9737;</span></button></nav></header>
+  <main>
+    <section class="page-hero">
+      <h2>Our Solutions</h2>
+      <p>AI-powered systems designed to simplify inquiries, organize information, and help teams respond with confidence.</p>
+    </section>
+    <section>
+      <div id="solutionsGrid" class="cards-grid"><p class="loading-msg">Loading...</p></div>
+    </section>
+  </main>
+  <footer><p>&copy; 2026 AI-Solutions, Sunderland. AI-driven software solutions for digital employee experience and inquiry management.</p></footer>
+  <script src="chatbot.js"></script>
+  <script>
+    async function load() {
+      const grid = document.getElementById('solutionsGrid');
+      try {
+        const res = await fetch('http://localhost:5000/api/posts/solutions');
+        const posts = await res.json();
+        if (!posts.length) {
+          grid.innerHTML = `
+            <div class="card"><h4>AI Inquiry Management</h4><p>Automate customer inquiry handling with AI-powered smart responses.</p></div>
+            <div class="card"><h4>Digital Transformation</h4><p>Modernise your business processes using AI and digital tools.</p></div>
+            <div class="card"><h4>Data Analytics</h4><p>Transform raw data into meaningful business insights.</p></div>
+            <div class="card"><h4>Custom AI Development</h4><p>Bespoke AI solutions designed for your specific challenges.</p></div>`;
+          return;
+        }
+        grid.innerHTML = posts.map(p => `
+          <div class="card">
+            ${p.extra ? `<span class="tag">${p.extra}</span>` : ''}
+            <h4>${p.title}</h4>
+            <p>${p.content}</p>
+          </div>`).join('');
+      } catch { grid.innerHTML = '<p class="loading-msg">Could not load content.</p>'; }
+    }
+    load();
+  </script>
+</body>
+</html>

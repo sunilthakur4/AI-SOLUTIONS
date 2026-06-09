@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog &amp; Case Studies - AI-Solutions</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header><nav><a href="index.html" class="brand" aria-label="AI-Solutions home"><img src="logo.svg" alt="AI-Solutions logo"/><span>AI-Solutions</span></a><button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button><ul>
+    <li><a href="index.html">Home</a></li><li><a href="solutions.html">Solutions</a></li>
+    <li><a href="events.html">Events</a></li>
+    <li><a href="blog-casestudies.html" class="active">Blog &amp; Case Studies</a></li>
+    <li><a href="testimonials.html">Testimonials</a></li><li><a href="gallery.html">Gallery</a></li>
+    <li><a href="contact.html">Contact Us</a></li>
+  </ul><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"><span class="theme-label">DAY MODE</span><span class="theme-icon" aria-hidden="true">&#9737;</span></button></nav></header>
+  <main>
+    <section class="page-hero">
+      <h2>Blog &amp; Case Studies</h2>
+      <p>Practical AI ideas, implementation notes, and customer stories from real digital transformation work.</p>
+    </section>
+    <section>
+      <div class="tab-section">
+        <div class="tab-bar">
+          <button class="tab active" onclick="switchTab('blog', this)">Blog &amp; Articles</button>
+          <button class="tab" onclick="switchTab('casestudies', this)">Case Studies</button>
+        </div>
+        <div id="contentGrid" class="cards-grid"><p class="loading-msg">Loading...</p></div>
+      </div>
+    </section>
+  </main>
+  <footer><p>&copy; 2026 AI-Solutions, Sunderland. AI-driven software solutions for digital employee experience and inquiry management.</p></footer>
+  <script src="chatbot.js"></script>
+  <script>
+    const BACKEND = 'http://localhost:5000';
+
+    const defaults = {
+      blog: [
+        { title:'How AI is Revolutionising Customer Support', content:'Discover how AI-powered chatbots and inquiry management systems are transforming the way businesses interact with their customers.', extra:'May 1, 2026' },
+        { title:'Top 5 Benefits of Digital Transformation', content:'Digital transformation is no longer optional. Learn the top five benefits businesses gain when they embrace AI-driven digital tools.', extra:'April 20, 2026' },
+        { title:'Understanding Data Analytics for Business Growth', content:'Data analytics helps your business make smarter, faster decisions with clearer insight into customer and operational patterns.', extra:'April 10, 2026' },
+        { title:'Gemini API and Modern AI Integration', content:'Modern AI APIs are making intelligent automation more accessible for business websites, dashboards, and support workflows.', extra:'March 28, 2026' }
+      ],
+      casestudies: [
+        { title:'RetailCo - AI Customer Support', content:'Implemented an AI-powered inquiry management system reducing response time by 70% and improving customer satisfaction scores significantly.', extra:'Client: RetailCo' },
+        { title:'HealthFirst - Digital Transformation', content:'Developed a patient data management platform integrated with AI diagnostic support, streamlining operations across five clinics.', extra:'Client: HealthFirst' },
+        { title:'FinTrack - Data Analytics Dashboard', content:'Built a real-time analytics dashboard providing financial insights and automated reporting for a leading finance company.', extra:'Client: FinTrack' },
+        { title:'EduSmart - Custom AI Platform', content:'Created a personalised learning AI platform that adapts course content based on individual student performance.', extra:'Client: EduSmart' }
+      ]
+    };
+
+    async function loadContent(tab) {
+      const grid = document.getElementById('contentGrid');
+      grid.innerHTML = '<p class="loading-msg">Loading...</p>';
+      try {
+        const res = await fetch(`${BACKEND}/api/posts/${tab}`);
+        const posts = await res.json();
+        const items = posts.length ? posts : defaults[tab];
+        renderCards(items);
+      } catch {
+        renderCards(defaults[tab]);
+      }
+    }
+
+    function renderCards(items) {
+      document.getElementById('contentGrid').innerHTML = items.map(p => `
+        <div class="card">
+          ${p.extra ? `<div class="meta">${p.extra}</div>` : ''}
+          <h4>${p.title}</h4>
+          <p>${p.content}</p>
+        </div>`).join('');
+    }
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      loadContent(tab);
+    }
+
+    loadContent('blog');
+  </script>
+</body>
+</html>

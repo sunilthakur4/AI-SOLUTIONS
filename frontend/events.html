@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Events - AI-Solutions</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header><nav><a href="index.html" class="brand" aria-label="AI-Solutions home"><img src="logo.svg" alt="AI-Solutions logo"/><span>AI-Solutions</span></a><button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button><ul>
+    <li><a href="index.html">Home</a></li><li><a href="solutions.html">Solutions</a></li>
+    <li><a href="events.html" class="active">Events</a></li>
+    <li><a href="blog-casestudies.html">Blog &amp; Case Studies</a></li>
+    <li><a href="testimonials.html">Testimonials</a></li><li><a href="gallery.html">Gallery</a></li>
+    <li><a href="contact.html">Contact Us</a></li>
+  </ul><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"><span class="theme-label">DAY MODE</span><span class="theme-icon" aria-hidden="true">&#9737;</span></button></nav></header>
+  <main>
+    <section class="page-hero">
+      <h2>Events</h2>
+      <p>Join AI-Solutions for workshops, product demos, and conversations about practical AI adoption.</p>
+    </section>
+    <section>
+      <h2>Events</h2>
+      <div id="eventsGrid" class="events-timeline"><p class="loading-msg">Loading...</p></div>
+    </section>
+  </main>
+  <footer><p>&copy; 2026 AI-Solutions, Sunderland. AI-driven software solutions for digital employee experience and inquiry management.</p></footer>
+  <script src="chatbot.js"></script>
+  <script>
+    const defaults = [
+      {
+        title:'AI Inquiry Automation Workshop',
+        content:'A hands-on session for teams that want to automate repetitive customer questions and improve response speed.',
+        month:'JUN',
+        day:'18',
+        time:'10:00 AM - 12:00 PM',
+        location:'Online Webinar',
+        status:'Registration Open'
+      },
+      {
+        title:'Digital Transformation Strategy Meetup',
+        content:'A practical meetup covering workflow mapping, automation readiness, and choosing the right AI tools.',
+        month:'JUL',
+        day:'09',
+        time:'2:00 PM - 4:00 PM',
+        location:'Kathmandu Tech Hub',
+        status:'Limited Seats'
+      },
+      {
+        title:'AI Analytics Demo Day',
+        content:'See dashboards, reporting flows, and AI-assisted insights designed for small and growing businesses.',
+        month:'AUG',
+        day:'22',
+        time:'11:00 AM - 1:00 PM',
+        location:'Hybrid Event',
+        status:'Coming Soon'
+      }
+    ];
+
+    async function loadEvents() {
+      const grid = document.getElementById('eventsGrid');
+      try {
+        const res = await fetch('http://localhost:5000/api/posts/events');
+        const posts = await res.json();
+        const items = posts.length ? posts.map((p, index) => {
+          const fallback = defaults[index % defaults.length];
+          const parts = (p.extra || '').split('|').map(part => part.trim());
+          return {
+            title:p.title,
+            content:p.content,
+            month:parts[0] || fallback.month,
+            day:parts[1] || fallback.day,
+            time:parts[2] || 'To be announced',
+            location:parts[3] || 'To be announced',
+            status:parts[4] || (p.title.startsWith('Completed:') ? 'Past Event' : 'Upcoming')
+          };
+        }) : defaults;
+        renderEvents(items);
+      } catch {
+        renderEvents(defaults);
+      }
+    }
+
+    function renderEvents(items) {
+      document.getElementById('eventsGrid').innerHTML = items.map(event => `
+        <article class="card event-card">
+          <div class="event-date">${event.month}<span>${event.day}</span></div>
+          <span class="event-status">${event.status}</span>
+          <h4>${event.title}</h4>
+          <p>${event.content}</p>
+          <div class="event-details">
+            <span><strong>Time:</strong> ${event.time}</span>
+            <span><strong>Location:</strong> ${event.location}</span>
+          </div>
+        </article>`).join('');
+    }
+
+    loadEvents();
+  </script>
+</body>
+</html>

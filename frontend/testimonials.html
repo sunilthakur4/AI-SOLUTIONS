@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Testimonials - AI-Solutions</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header><nav><a href="index.html" class="brand" aria-label="AI-Solutions home"><img src="logo.svg" alt="AI-Solutions logo"/><span>AI-Solutions</span></a><button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button><ul>
+    <li><a href="index.html">Home</a></li><li><a href="solutions.html">Solutions</a></li>
+    <li><a href="events.html">Events</a></li>
+    <li><a href="blog-casestudies.html">Blog &amp; Case Studies</a></li>
+    <li><a href="testimonials.html" class="active">Testimonials</a></li><li><a href="gallery.html">Gallery</a></li>
+    <li><a href="contact.html">Contact Us</a></li>
+  </ul><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"><span class="theme-label">DAY MODE</span><span class="theme-icon" aria-hidden="true">&#9737;</span></button></nav></header>
+  <main>
+    <section class="page-hero">
+      <h2>Customer Testimonials</h2>
+      <p>Feedback from teams using AI-Solutions to improve support, reporting, and digital operations.</p>
+    </section>
+    <section>
+      <div id="testimonialsGrid" class="cards-grid"><p class="loading-msg">Loading...</p></div>
+    </section>
+  </main>
+  <footer><p>&copy; 2026 AI-Solutions, Sunderland. AI-driven software solutions for digital employee experience and inquiry management.</p></footer>
+  <script src="chatbot.js"></script>
+  <script>
+    async function load() {
+      const grid = document.getElementById('testimonialsGrid');
+      try {
+        const res = await fetch('http://localhost:5000/api/posts/testimonials');
+        const posts = await res.json();
+        if (!posts.length) {
+          grid.innerHTML = `
+            <div class="card"><p>"AI-Solutions completely transformed how we handle customer inquiries."</p><div class="rating">Rating: 5 out of 5</div><div class="author">James Carter, CEO, RetailCo</div></div>
+            <div class="card"><p>"Exceptional service and practical AI technology that our team actually uses."</p><div class="rating">Rating: 5 out of 5</div><div class="author">Sarah Mitchell, CTO, HealthFirst</div></div>
+            <div class="card"><p>"The analytics dashboard gave us real-time insights we never had before."</p><div class="rating">Rating: 4 out of 5</div><div class="author">David Pham, Director, FinTrack</div></div>
+            <div class="card"><p>"A professional and dedicated team. Delivered exactly what we needed."</p><div class="rating">Rating: 5 out of 5</div><div class="author">Priya Sharma, Head of IT, EduSmart</div></div>`;
+          return;
+        }
+        grid.innerHTML = posts.map(p => `
+          <div class="card">
+            <p>"${p.content}"</p>
+            <div class="rating">Rating: ${p.rating || 5} out of 5</div>
+            <div class="author">${p.author || ''}${p.extra ? ', ' + p.extra : ''}</div>
+          </div>`).join('');
+      } catch { grid.innerHTML = '<p class="loading-msg">Could not load content.</p>'; }
+    }
+    load();
+  </script>
+</body>
+</html>
