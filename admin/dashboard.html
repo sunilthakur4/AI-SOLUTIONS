@@ -55,6 +55,17 @@
           <div class="stat-card"><h3 id="weekCount">--</h3><p>This Week</p></div>
           <div class="stat-card"><h3 id="repliedCount">--</h3><p>Replied</p></div>
         </div>
+        <div class="chart-card">
+          <div class="chart-heading">
+            <div>
+              <h3>Inquiry Overview</h3>
+              <p>Quick visual summary of inquiry activity.</p>
+            </div>
+          </div>
+          <div id="inquiryChart" class="bar-chart" aria-label="Inquiry overview bar chart">
+            <p class="muted-text">Loading chart...</p>
+          </div>
+        </div>
         <div class="admin-toolbar">
           <input type="text" id="searchInput" placeholder="Search by name, company or country..."/>
           <select id="sortSelect">
@@ -66,9 +77,9 @@
           <button class="btn btn-sm" onclick="loadInquiries()">Search</button>
         </div>
         <div class="table-wrap">
-          <table>
-            <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Country</th><th>Job Title</th><th>Inquiry</th><th>AI Response</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
-            <tbody id="inquiryBody"><tr><td colspan="12" style="text-align:center;">Loading...</td></tr></tbody>
+          <table class="inquiry-table">
+            <thead><tr><th>#</th><th>Name</th><th>Contact</th><th>Company / Country</th><th>Job Title</th><th>Inquiry</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+            <tbody id="inquiryBody"><tr><td colspan="9" style="text-align:center;">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -95,7 +106,7 @@
           <button class="btn btn-sm" onclick="openPostModal()">Add New Post</button>
         </div>
         <div class="table-wrap">
-          <table>
+          <table class="content-table">
             <thead><tr><th>#</th><th>Page</th><th>Title</th><th>Content</th><th>Author/Extra</th><th>Published</th><th>Date</th><th>Actions</th></tr></thead>
             <tbody id="postsBody"><tr><td colspan="8" style="text-align:center;">Loading...</td></tr></tbody>
           </table>
@@ -206,26 +217,37 @@
       const search = document.getElementById('searchInput').value;
       const sort = document.getElementById('sortSelect').value;
       const tbody = document.getElementById('inquiryBody');
-      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;">Loading...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Loading...</td></tr>';
       try {
         const res = await fetch(`${BACKEND}/api/admin/inquiries?search=${encodeURIComponent(search)}&sort=${sort}`, { headers:{'Authorization':`Bearer ${token}`} });
         if (res.status === 401 || res.status === 403) { logout(); return; }
         const data = await res.json();
         const today = new Date().toDateString();
         const weekAgo = new Date(Date.now()-7*24*60*60*1000);
+        const todayItems = data.filter(i=>new Date(i.created_at).toDateString()===today);
+        const weekItems = data.filter(i=>new Date(i.created_at)>=weekAgo);
+        const repliedItems = data.filter(i=>i.admin_reply);
         document.getElementById('totalCount').textContent = data.length;
-        document.getElementById('todayCount').textContent = data.filter(i=>new Date(i.created_at).toDateString()===today).length;
-        document.getElementById('weekCount').textContent = data.filter(i=>new Date(i.created_at)>=weekAgo).length;
-        document.getElementById('repliedCount').textContent = data.filter(i=>i.admin_reply).length;
+        document.getElementById('todayCount').textContent = todayItems.length;
+        document.getElementById('weekCount').textContent = weekItems.length;
+        document.getElementById('repliedCount').textContent = repliedItems.length;
+        renderInquiryChart({
+          total:data.length,
+          today:todayItems.length,
+          week:weekItems.length,
+          replied:repliedItems.length,
+          pending:data.length - repliedItems.length
+        });
         inquiriesById = Object.fromEntries(data.map(i => [String(i.id), i]));
-        if (!data.length) { tbody.innerHTML='<tr><td colspan="12" style="text-align:center;">No inquiries found.</td></tr>'; return; }
+        if (!data.length) { tbody.innerHTML='<tr><td colspan="9" style="text-align:center;">No inquiries found.</td></tr>'; return; }
         tbody.innerHTML = data.map((i,idx)=>`
           <tr class="inquiry-summary-row">
-            <td>${idx+1}</td><td>${escapeHtml(i.name)}</td>
-            <td><a href="mailto:${escapeAttr(i.email)}" class="link-text">${escapeHtml(i.email)}</a></td>
-            <td>${escapeHtml(i.phone||'-')}</td><td>${escapeHtml(i.company||'-')}</td><td>${escapeHtml(i.country||'-')}</td><td>${escapeHtml(i.job_title||'-')}</td>
-            <td class="truncate-cell">${escapeHtml(i.job_details)}</td>
-            <td class="truncate-cell link-text">${escapeHtml(i.ai_response||'Pending')}</td>
+            <td>${idx+1}</td>
+            <td>${escapeHtml(i.name)}</td>
+            <td><a href="mailto:${escapeAttr(i.email)}" class="link-text">${escapeHtml(i.email)}</a><span class="cell-subtext">${escapeHtml(i.phone||'No phone')}</span></td>
+            <td>${escapeHtml(i.company||'-')}<span class="cell-subtext">${escapeHtml(i.country||'-')}</span></td>
+            <td>${escapeHtml(i.job_title||'-')}</td>
+            <td><div class="cell-preview">${escapeHtml(i.job_details)}</div></td>
             <td>${i.admin_reply?'<span class="replied-badge">Replied</span>':'<span class="pending-text">Pending</span>'}</td>
             <td>${new Date(i.created_at).toLocaleDateString()}</td>
             <td class="row-actions">
@@ -235,7 +257,7 @@
             </td>
           </tr>
           <tr class="inquiry-detail-row" id="inquiry-detail-${i.id}">
-            <td colspan="12">
+            <td colspan="9">
               <div class="inquiry-detail-card">
                 <div><strong>Full Inquiry</strong><p>${escapeHtml(i.job_details)}</p></div>
                 <div><strong>AI Response</strong><p>${escapeHtml(i.ai_response||'Pending')}</p></div>
@@ -252,8 +274,29 @@
             </td>
           </tr>`).join('');
       } catch(err) {
-        tbody.innerHTML = '<tr><td colspan="12" class="danger-text" style="text-align:center;">Failed to load. Is the server running?</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="danger-text" style="text-align:center;">Failed to load. Is the server running?</td></tr>';
       }
+    }
+
+    function renderInquiryChart(counts) {
+      const chart = document.getElementById('inquiryChart');
+      const bars = [
+        { label:'Total', value:counts.total },
+        { label:'Today', value:counts.today },
+        { label:'This Week', value:counts.week },
+        { label:'Replied', value:counts.replied },
+        { label:'Pending', value:counts.pending }
+      ];
+      const max = Math.max(...bars.map(bar => bar.value), 1);
+      chart.innerHTML = bars.map(bar => {
+        const height = Math.max(8, Math.round((bar.value / max) * 150));
+        return `
+          <div class="bar-item">
+            <strong>${bar.value}</strong>
+            <div class="bar-track"><span style="height:${height}px"></span></div>
+            <small>${bar.label}</small>
+          </div>`;
+      }).join('');
     }
 
     function escapeHtml(value) {
@@ -338,15 +381,15 @@
         const posts = await res.json();
         if (!posts.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;">No posts found. Click "Add New Post" to create one.</td></tr>'; return; }
         tbody.innerHTML = posts.map((p,i)=>`
-          <tr>
-            <td>${i+1}</td>
-            <td><span class="tag">${p.page}</span></td>
-            <td><strong>${p.title}</strong></td>
-            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.content||'-'}</td>
-            <td>${p.author||''} ${p.extra||''}</td>
-            <td>${p.published?'<span class="success-text">Yes</span>':'<span class="danger-text">No</span>'}</td>
-            <td>${new Date(p.created_at).toLocaleDateString()}</td>
-            <td style="display:flex;gap:6px;">
+          <tr class="content-row">
+            <td data-label="#">${i+1}</td>
+            <td data-label="Page"><span class="tag">${p.page}</span></td>
+            <td data-label="Title"><strong>${p.title}</strong></td>
+            <td data-label="Content"><div class="content-preview">${p.content||'-'}</div></td>
+            <td data-label="Author / Extra">${p.author||''} ${p.extra||''}</td>
+            <td data-label="Published">${p.published?'<span class="success-text">Yes</span>':'<span class="danger-text">No</span>'}</td>
+            <td data-label="Date">${new Date(p.created_at).toLocaleDateString()}</td>
+            <td data-label="Actions" class="content-actions">
               <button class="btn-edit" onclick="editPost(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>
               <button class="btn-danger" onclick="deletePost(${p.id})">Delete</button>
             </td>

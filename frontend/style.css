@@ -527,6 +527,23 @@ section > p {
   border-color:var(--blue);
   box-shadow:0 0 0 4px rgba(14,165,233,0.12);
 }
+.declaration-check {
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  color:var(--muted);
+  font-size:0.9rem;
+  line-height:1.5;
+  margin:4px 0 18px;
+  cursor:pointer;
+}
+.declaration-check input {
+  width:18px;
+  height:18px;
+  margin-top:2px;
+  flex:0 0 auto;
+  accent-color:var(--blue);
+}
 .form-message { margin-top:16px; font-weight:800; text-align:center; }
 
 .login-section { display:flex; justify-content:center; align-items:center; min-height:80vh; padding:40px; }

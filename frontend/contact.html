@@ -1,21 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact Us - AI-Solutions</title>
   <script src="theme.js"></script>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style.css" />
   <script src="https://www.google.com/recaptcha/api.js?render=6LcbsxEtAAAAAA_sd-G5YTUs_YvzEyZhbNcBIiac"></script>
 </head>
+
 <body>
-  <header><nav><a href="index.html" class="brand" aria-label="AI-Solutions home"><img src="logo.svg" alt="AI-Solutions logo"/><span>AI-Solutions</span></a><button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button><ul>
-    <li><a href="index.html">Home</a></li><li><a href="solutions.html">Solutions</a></li>
-    <li><a href="events.html">Events</a></li>
-    <li><a href="blog-casestudies.html">Blog &amp; Case Studies</a></li>
-    <li><a href="testimonials.html">Testimonials</a></li><li><a href="gallery.html">Gallery</a></li>
-    <li><a href="contact.html" class="active">Contact Us</a></li>
-  </ul><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"><span class="theme-label">DAY MODE</span><span class="theme-icon" aria-hidden="true">&#9737;</span></button></nav></header>
+  <header>
+    <nav><a href="index.html" class="brand" aria-label="AI-Solutions home"><img src="logo.svg"
+          alt="AI-Solutions logo" /><span>AI-Solutions</span></a><button class="nav-toggle" type="button"
+        aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="solutions.html">Solutions</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="blog-casestudies.html">Blog &amp; Case Studies</a></li>
+        <li><a href="testimonials.html">Testimonials</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="contact.html" class="active">Contact Us</a></li>
+      </ul><button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"><span
+          class="theme-label">DAY MODE</span><span class="theme-icon" aria-hidden="true">&#9737;</span></button>
+    </nav>
+  </header>
   <main>
     <section class="page-hero">
       <h2>Start a Conversation</h2>
@@ -27,36 +38,41 @@
         <form id="contactForm">
           <div class="form-group">
             <label>Full Name *</label>
-            <input type="text" id="name" required placeholder="Enter your full name"/>
+            <input type="text" id="name" required placeholder="Enter your full name" />
           </div>
           <div class="form-group">
             <label>Email Address *</label>
-            <input type="email" id="email" required placeholder="Enter your email address"/>
+            <input type="email" id="email" required placeholder="Enter your email address" />
           </div>
           <div class="form-row">
             <div class="form-group">
               <label>Phone Number</label>
-              <input type="tel" id="phone" placeholder="Enter your phone number"/>
+              <input type="tel" id="phone" placeholder="Enter your phone number" />
             </div>
             <div class="form-group">
               <label>Country</label>
-              <input type="text" id="country" placeholder="Enter your country"/>
+              <input type="text" id="country" placeholder="Enter your country" />
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label>Company Name</label>
-              <input type="text" id="company" placeholder="Enter your company name"/>
+              <input type="text" id="company" placeholder="Enter your company name" />
             </div>
             <div class="form-group">
               <label>Job Title</label>
-              <input type="text" id="jobTitle" placeholder="Enter your job title"/>
+              <input type="text" id="jobTitle" placeholder="Enter your job title" />
             </div>
           </div>
           <div class="form-group">
             <label>Job Details / Inquiry *</label>
             <textarea id="jobDetails" rows="5" required placeholder="Describe your inquiry in detail..."></textarea>
           </div>
+          <label class="declaration-check">
+            <input type="checkbox" id="declaration" required />
+            <span>I confirm that the information I provide is accurate and understand it will be handled securely by
+              AI-Solutions for inquiry response purposes.</span>
+          </label>
           <button type="submit" class="btn" style="width:100%">Submit Inquiry</button>
           <p id="formMessage" class="form-message"></p>
         </form>
@@ -64,7 +80,8 @@
       <aside class="contact-info-panel" aria-label="Contact information">
         <span class="section-kicker">How We Help</span>
         <h3>Tell us what you want to improve</h3>
-        <p>Share your inquiry, workflow problem, or AI idea. We will review the details and reply with practical next steps.</p>
+        <p>Share your inquiry, workflow problem, or AI idea. We will review the details and reply with practical next
+          steps.</p>
         <div class="contact-info-list">
           <div>
             <strong>Response Time</strong>
@@ -82,7 +99,10 @@
       </aside>
     </section>
   </main>
-  <footer><p>&copy; 2026 AI-Solutions, Sunderland. AI-driven software solutions for digital employee experience and inquiry management.</p></footer>
+  <footer>
+    <p>&copy; 2026 AI-Solutions, Sunderland. AI-driven software solutions for digital employee experience and inquiry
+      management.</p>
+  </footer>
   <script src="chatbot.js"></script>
   <script>
     const RECAPTCHA_SITE_KEY = '6LcbsxEtAAAAAA_sd-G5YTUs_YvzEyZhbNcBIiac';
@@ -99,10 +119,15 @@
       });
     }
 
-    document.getElementById('contactForm').addEventListener('submit', async function(e) {
+    document.getElementById('contactForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       const msg = document.getElementById('formMessage');
       msg.style.color = '';
+      if (!document.getElementById('declaration').checked) {
+        msg.style.color = 'red';
+        msg.textContent = 'Please confirm the declaration before submitting.';
+        return;
+      }
       msg.textContent = 'Submitting...';
       try {
         const data = {
@@ -116,7 +141,7 @@
           recaptchaToken: await getRecaptchaToken('contact_inquiry')
         };
         const res = await fetch('http://localhost:5000/api/inquiries', {
-          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
         });
         const result = await res.json();
         if (res.ok) {
@@ -134,4 +159,5 @@
     });
   </script>
 </body>
+
 </html>
